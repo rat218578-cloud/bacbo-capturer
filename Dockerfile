@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-# Instala dependências do sistema para Chrome
+# Instala dependências do sistema para Chrome e PostgreSQL
 RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y \
     libxdamage1 \
     libxrandr2 \
     xdg-utils \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Instala Python dependencies
@@ -37,5 +38,8 @@ COPY . .
 ENV PYTHONUNBUFFERED=1
 ENV DISPLAY=:99
 
-# Comando para executar
+# Expõe porta (se usar API)
+EXPOSE 8000
+
+# Comando para executar (USANDO PYTHON, não npm!)
 CMD ["python", "capturer.py"]
