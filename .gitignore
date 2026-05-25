@@ -9,7 +9,10 @@ __pycache__/
 dist/
 build/
 .env
-data/
 chrome_profile/
-playwright_profile/
 *.log
+*.jsonl
+*.db
+.DS_Store
+.vscode/
+.idea/
