@@ -2,176 +2,406 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🎰 Sinais Rick Roleta - Ao Vivo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover, user-scalable=no">
+    <title>Rick Roleta - Sinais Ao Vivo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #6000ff;
+            --primary-hover: #5600e5;
+            --bg: #090808;
+            --bg-card: #1a1a1a;
+            --text: #ffffff;
+            --text-secondary: #888;
+            --green: #00ff88;
+            --red: #ff3355;
+            --yellow: #ffaa00;
+        }
+        
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'Segoe UI', sans-serif; 
-            background: #090808; 
-            color: #fff; 
-            padding: 20px;
+        
+        body {
+            font-family: 'Raleway', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
         }
-        .header { 
-            text-align: center; 
-            margin-bottom: 30px;
-            padding: 20px;
-            background: linear-gradient(135deg, #6000ff, #8c2eff);
-            border-radius: 15px;
+        
+        /* Loading inicial */
+        .loader {
+            position: fixed;
+            inset: 0;
+            background: #121212;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s;
         }
-        .header h1 { font-size: 28px; margin-bottom: 5px; }
-        .header span { opacity: 0.8; font-size: 14px; }
-        .sinais-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        .loader.hidden { opacity: 0; pointer-events: none; }
+        .spinner {
+            width: 64px; height: 64px;
+            border: 4px solid #2a2a2a;
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Header */
+        .header {
+            background: var(--bg);
+            padding: 20px;
+            border-bottom: 1px solid #222;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             gap: 15px;
+            flex-wrap: wrap;
         }
-        .sinal-card {
-            background: #1a1a1a;
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 20px;
+            font-weight: 700;
+        }
+        .logo-icon {
+            width: 40px; height: 40px;
+            background: var(--primary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        /* Filtros */
+        .filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid #333;
+            border-radius: 20px;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 13px;
+            font-family: 'Raleway', sans-serif;
+            transition: all 0.3s;
+        }
+        .filter-btn:hover { border-color: var(--primary); color: var(--text); }
+        .filter-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        
+        /* Stats */
+        .stats-bar {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px;
+        }
+        .stat-card {
+            background: var(--bg-card);
             border-radius: 12px;
-            padding: 20px;
-            border-left: 5px solid #6000ff;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #222;
+        }
+        .stat-value { font-size: 28px; font-weight: 700; }
+        .stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 5px; }
+        .stat-total .stat-value { color: var(--primary); }
+        .stat-green .stat-value { color: var(--green); }
+        .stat-red .stat-value { color: var(--red); }
+        .stat-entrada .stat-value { color: var(--yellow); }
+        
+        /* Grid de Sinais */
+        .sinais-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px 40px;
+        }
+        .sinais-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 12px;
+        }
+        
+        /* Card */
+        .sinal-card {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 16px;
+            border-left: 4px solid var(--text-secondary);
+            border: 1px solid #222;
             transition: all 0.3s;
             position: relative;
+            overflow: hidden;
         }
-        .sinal-card:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(96,0,255,0.3); }
-        .sinal-card.green { border-left-color: #00ff88; }
-        .sinal-card.red { border-left-color: #ff3355; }
-        .sinal-card.entrada { border-left-color: #ffaa00; animation: pulse 1.5s infinite; }
-        .sinal-card.analisando { border-left-color: #888; }
-        
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 10px rgba(255,170,0,0.3); }
-            50% { box-shadow: 0 0 25px rgba(255,170,0,0.6); }
+        .sinal-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 4px; height: 100%;
+            background: var(--text-secondary);
+        }
+        .sinal-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(96,0,255,0.15);
+            border-color: var(--primary);
+        }
+        .sinal-card.green::before { background: var(--green); }
+        .sinal-card.red::before { background: var(--red); }
+        .sinal-card.entrada::before { background: var(--yellow); }
+        .sinal-card.entrada {
+            animation: pulse-card 2s infinite;
+        }
+        @keyframes pulse-card {
+            0%, 100% { box-shadow: 0 0 10px rgba(255,170,0,0.1); }
+            50% { box-shadow: 0 0 20px rgba(255,170,0,0.3); }
         }
         
-        .sinal-tipo {
+        .card-tipo {
             font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 2px;
             font-weight: 700;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
-        .sinal-tipo.green { color: #00ff88; }
-        .sinal-tipo.red { color: #ff3355; }
-        .sinal-tipo.entrada { color: #ffaa00; }
-        .sinal-tipo.analisando { color: #888; }
+        .card-tipo.green { color: var(--green); }
+        .card-tipo.red { color: var(--red); }
+        .card-tipo.entrada { color: var(--yellow); }
+        .card-tipo.analisando { color: var(--text-secondary); }
         
-        .sinal-jogo { font-size: 12px; color: #888; margin-bottom: 5px; }
-        .sinal-entrada { 
-            font-size: 22px; 
-            font-weight: 700; 
-            margin: 10px 0;
-            color: #fff;
-        }
-        .sinal-anterior { 
-            font-size: 13px; 
-            color: #aaa; 
-            font-family: monospace;
-            margin: 8px 0;
-        }
-        .sinal-status {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-top: 5px;
-        }
-        .sinal-resultado {
-            font-weight: 700;
+        .card-jogo { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+        .card-id { font-size: 11px; color: #444; margin-bottom: 8px; font-family: monospace; }
+        
+        .card-entrada {
             font-size: 16px;
-            margin-top: 5px;
+            font-weight: 600;
+            margin: 8px 0;
+            color: var(--text);
+            line-height: 1.4;
         }
-        .sinal-green { color: #00ff88; }
-        .sinal-loss { color: #ff3355; }
-        .sinal-data { font-size: 11px; color: #555; margin-top: 10px; }
-        .stats-bar {
-            background: #1a1a1a;
+        .card-anterior {
+            font-size: 12px;
+            color: #666;
+            font-family: monospace;
+            margin: 6px 0;
+            padding: 6px 8px;
+            background: #111;
+            border-radius: 6px;
+        }
+        
+        .card-status {
+            display: inline-block;
+            padding: 2px 10px;
             border-radius: 12px;
-            padding: 15px 25px;
-            margin-bottom: 20px;
-            display: flex;
-            gap: 30px;
-            flex-wrap: wrap;
+            font-size: 11px;
+            font-weight: 600;
+            margin: 4px 0;
         }
-        .stat-item { text-align: center; }
-        .stat-value { font-size: 24px; font-weight: 700; }
-        .stat-label { font-size: 12px; color: #888; }
-        .stat-green .stat-value { color: #00ff88; }
-        .stat-red .stat-value { color: #ff3355; }
-        .stat-total .stat-value { color: #6000ff; }
-        .stat-entrada .stat-value { color: #ffaa00; }
-        .auto-refresh { 
-            text-align: center; 
-            margin-top: 20px;
-            font-size: 13px;
-            color: #555;
+        .card-status.active { background: rgba(0,255,136,0.1); color: var(--green); }
+        .card-status.inactive { background: rgba(255,51,85,0.1); color: var(--red); }
+        
+        .card-resultado {
+            font-weight: 700;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+        .card-resultado.green { color: var(--green); }
+        .card-resultado.red { color: var(--red); }
+        
+        .card-data {
+            font-size: 10px;
+            color: #444;
+            margin-top: 8px;
+        }
+        .card-slug {
+            font-size: 10px;
+            color: #333;
+            margin-top: 2px;
+            font-family: monospace;
+        }
+        
+        /* Footer atualização */
+        .refresh-info {
+            text-align: center;
+            padding: 20px;
+            color: #444;
+            font-size: 12px;
+        }
+        
+        /* Responsivo */
+        @media (max-width: 600px) {
+            .sinais-grid {
+                grid-template-columns: 1fr;
+            }
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🎰 Sinais Rick Roleta</h1>
-        <span>Dados públicos da API - Sem necessidade de login</span>
+    <!-- Loader -->
+    <div class="loader" id="loader">
+        <div class="spinner"></div>
     </div>
 
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">🎰</div>
+                <span>Rick Roleta <span style="color: var(--text-secondary); font-weight: 400; font-size: 14px;">Sinais</span></span>
+            </div>
+            <div class="filters" id="filters">
+                <button class="filter-btn active" data-filter="all">🔥 Todos</button>
+                <button class="filter-btn" data-filter="bacbo">🎲 Bac Bo</button>
+                <button class="filter-btn" data-filter="roleta">🎡 Roleta</button>
+                <button class="filter-btn" data-filter="entrada">🎯 Entradas</button>
+                <button class="filter-btn" data-filter="green">✅ Green</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Stats -->
     <div class="stats-bar" id="statsBar">
-        <div class="stat-item stat-total">
+        <div class="stat-card stat-total">
             <div class="stat-value" id="totalSinais">0</div>
             <div class="stat-label">Total Sinais</div>
         </div>
-        <div class="stat-item stat-green">
+        <div class="stat-card stat-green">
             <div class="stat-value" id="totalGreen">0</div>
             <div class="stat-label">✅ Green</div>
         </div>
-        <div class="stat-item stat-red">
+        <div class="stat-card stat-red">
             <div class="stat-value" id="totalRed">0</div>
             <div class="stat-label">❌ Red</div>
         </div>
-        <div class="stat-item stat-entrada">
+        <div class="stat-card stat-entrada">
             <div class="stat-value" id="totalEntrada">0</div>
             <div class="stat-label">🎯 Entradas</div>
         </div>
+        <div class="stat-card">
+            <div class="stat-value" id="assertividade" style="color: var(--yellow);">0%</div>
+            <div class="stat-label">📊 Assertividade</div>
+        </div>
     </div>
 
-    <div class="sinais-grid" id="sinaisGrid"></div>
-    
-    <div class="auto-refresh" id="refreshInfo">
-        ⏱️ Atualizando a cada 5 segundos | Última atualização: --
+    <!-- Grid de Sinais -->
+    <div class="sinais-container">
+        <div class="sinais-grid" id="sinaisGrid"></div>
+    </div>
+
+    <div class="refresh-info" id="refreshInfo">
+        ⏱️ Atualizando a cada 5 segundos | Aguardando dados...
     </div>
 
     <script>
+        let todosSinais = [];
+        let filtroAtivo = 'all';
+
+        // Filtros
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                filtroAtivo = btn.dataset.filter;
+                aplicarFiltro();
+            });
+        });
+
+        function aplicarFiltro() {
+            let filtrados = todosSinais;
+            
+            if (filtroAtivo === 'bacbo') {
+                filtrados = todosSinais.filter(s => 
+                    s.jogo?.toLowerCase().includes('bacbo') || 
+                    s.tipo_sinal?.toLowerCase().includes('bacbo') ||
+                    s.gameSlug?.toLowerCase().includes('bac-bo')
+                );
+            } else if (filtroAtivo === 'roleta') {
+                filtrados = todosSinais.filter(s => 
+                    !s.jogo?.toLowerCase().includes('bacbo') && 
+                    !s.tipo_sinal?.toLowerCase().includes('bacbo')
+                );
+            } else if (filtroAtivo === 'entrada') {
+                filtrados = todosSinais.filter(s => s.tipo === 'entrada');
+            } else if (filtroAtivo === 'green') {
+                filtrados = todosSinais.filter(s => s.tipo === 'green' || s.resultado === 'GREEN');
+            }
+            
+            renderizarSinais(filtrados);
+        }
+
         async function buscarSinais() {
             try {
-                const res = await fetch('https://rickroleta.com.br/api/sinais?limit=50');
+                const res = await fetch('https://rickroleta.com.br/api/sinais?limit=100');
                 const data = await res.json();
                 
                 if (!data.sinais || !Array.isArray(data.sinais)) return;
                 
-                atualizarUI(data.sinais, data.total);
+                todosSinais = data.sinais;
+                
+                // Atualiza stats
+                const greens = todosSinais.filter(s => s.tipo === 'green' || s.resultado === 'GREEN').length;
+                const reds = todosSinais.filter(s => s.tipo === 'red' || s.resultado === 'LOSS').length;
+                const entradas = todosSinais.filter(s => s.tipo === 'entrada').length;
+                const total = greens + reds;
+                const assertividade = total > 0 ? Math.round((greens / total) * 100) : 0;
+                
+                document.getElementById('totalSinais').textContent = data.total || todosSinais.length;
+                document.getElementById('totalGreen').textContent = greens;
+                document.getElementById('totalRed').textContent = reds;
+                document.getElementById('totalEntrada').textContent = entradas;
+                document.getElementById('assertividade').textContent = assertividade + '%';
+                
+                aplicarFiltro();
+                
+                document.getElementById('refreshInfo').innerHTML = 
+                    `⏱️ Atualizando a cada 5 segundos | Última atualização: ${new Date().toLocaleTimeString('pt-BR')} | ${todosSinais.length} sinais carregados`;
+                
+                // Esconde loader
+                document.getElementById('loader').classList.add('hidden');
+                
             } catch (e) {
                 console.error('Erro:', e);
             }
         }
 
-        function atualizarUI(sinais, total) {
-            // Atualiza stats
-            const greens = sinais.filter(s => s.tipo === 'green' || s.resultado === 'GREEN').length;
-            const reds = sinais.filter(s => s.tipo === 'red' || s.resultado === 'LOSS').length;
-            const entradas = sinais.filter(s => s.tipo === 'entrada').length;
-            
-            document.getElementById('totalSinais').textContent = total;
-            document.getElementById('totalGreen').textContent = greens;
-            document.getElementById('totalRed').textContent = reds;
-            document.getElementById('totalEntrada').textContent = entradas;
-            
-            // Atualiza cards
+        function renderizarSinais(sinais) {
             const grid = document.getElementById('sinaisGrid');
+            
+            if (sinais.length === 0) {
+                grid.innerHTML = '<div style="text-align:center;padding:40px;color:#444">Nenhum sinal encontrado para este filtro</div>';
+                return;
+            }
+            
             grid.innerHTML = sinais.map(sinal => {
                 let cardClass = 'sinal-card';
-                let tipoClass = 'sinal-tipo';
-                let tipoLabel = sinal.tipo || 'desconhecido';
+                let tipoClass = 'card-tipo';
+                let tipoLabel = sinal.tipo || 'analisando';
                 
                 if (sinal.tipo === 'green' || sinal.resultado === 'GREEN') {
                     cardClass += ' green';
@@ -186,42 +416,45 @@
                     tipoClass += ' analisando';
                 }
                 
-                const resultadoHtml = sinal.resultado 
-                    ? `<div class="sinal-resultado ${sinal.resultado === 'GREEN' ? 'sinal-green' : 'sinal-loss'}">${sinal.resultado === 'GREEN' ? '✅ GREEN!' : '❌ LOSS'}</div>`
-                    : '';
-                
-                const statusHtml = sinal.status === 1 ? '<span class="sinal-status" style="background:#00ff8822;color:#00ff88">Ativo</span>' 
-                    : sinal.status === 0 ? '<span class="sinal-status" style="background:#ff335522;color:#ff3355">Inativo</span>' 
-                    : '';
-                
-                const entrada = sinal.entrada || sinal.observacao || '';
-                
-                // Emojis por tipo
                 const emoji = sinal.tipo === 'green' ? '✅' 
                     : sinal.tipo === 'red' ? '❌' 
                     : sinal.tipo === 'entrada' ? '🎯'
                     : '🤖';
                 
+                const resultado = sinal.resultado === 'GREEN' 
+                    ? '<div class="card-resultado green">✅ GREEN!</div>' 
+                    : sinal.resultado === 'LOSS' 
+                    ? '<div class="card-resultado red">❌ LOSS</div>' 
+                    : '';
+                
+                const status = sinal.status === 1 
+                    ? '<span class="card-status active">● Ativo</span>' 
+                    : sinal.status === 0 
+                    ? '<span class="card-status inactive">● Inativo</span>' 
+                    : '';
+                
+                // Badge de jogo
+                const isBacBo = sinal.jogo?.toLowerCase().includes('bacbo') || 
+                               sinal.gameSlug?.toLowerCase().includes('bac-bo');
+                const gameBadge = isBacBo ? '🎲' : '🎡';
+                
                 return `
                     <div class="${cardClass}">
                         <div class="${tipoClass}">${emoji} ${tipoLabel.toUpperCase()}</div>
-                        <div class="sinal-jogo">🎮 ${sinal.jogo || 'Desconhecido'}</div>
-                        <div class="sinal-jogo">🆔 ${sinal.tipo_sinal || ''}</div>
-                        ${entrada ? `<div class="sinal-entrada">📊 ${entrada}</div>` : ''}
-                        ${sinal.anterior ? `<div class="sinal-anterior">📈 Anterior: ${sinal.anterior}</div>` : ''}
-                        ${statusHtml}
-                        ${resultadoHtml}
-                        <div class="sinal-data">🕐 ${new Date(sinal.data_criacao).toLocaleString('pt-BR')}</div>
-                        ${sinal.gameSlug ? `<div class="sinal-data">🔗 ${sinal.gameSlug}</div>` : ''}
+                        <div class="card-jogo">${gameBadge} ${sinal.jogo || 'Desconhecido'} ${isBacBo ? '🔥' : ''}</div>
+                        <div class="card-id">${sinal.tipo_sinal || ''}</div>
+                        ${sinal.entrada ? `<div class="card-entrada">${sinal.entrada}</div>` : ''}
+                        ${sinal.anterior ? `<div class="card-anterior">📊 ${sinal.anterior}</div>` : ''}
+                        ${status}
+                        ${resultado}
+                        <div class="card-data">🕐 ${new Date(sinal.data_criacao).toLocaleString('pt-BR')}</div>
+                        ${sinal.gameSlug ? `<div class="card-slug">${sinal.gameSlug}</div>` : ''}
                     </div>
                 `;
             }).join('');
-            
-            document.getElementById('refreshInfo').innerHTML = 
-                `⏱️ Atualizando a cada 5 segundos | Última atualização: ${new Date().toLocaleTimeString('pt-BR')}`;
         }
 
-        // Busca a cada 5 segundos
+        // Busca inicial e每隔 5s
         buscarSinais();
         setInterval(buscarSinais, 5000);
     </script>
