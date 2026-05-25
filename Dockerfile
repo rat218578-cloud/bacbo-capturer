@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-# Instala dependências do sistema para Chrome e PostgreSQL
+# Instala dependências do sistema
 RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
@@ -26,20 +26,16 @@ RUN apt-get update && apt-get install -y \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
-# Instala Python dependencies
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia o código
 COPY . .
 
-# Define variáveis de ambiente
 ENV PYTHONUNBUFFERED=1
 ENV DISPLAY=:99
 
-# Expõe porta (se usar API)
 EXPOSE 8000
 
-# Comando para executar (USANDO PYTHON, não npm!)
-CMD ["python", "capturer.py"]
+# Roda o gerenciador que inicia ambos os processos
+CMD ["python", "run.py"]
