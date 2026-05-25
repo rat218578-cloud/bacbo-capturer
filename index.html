@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎰 Sinais Rick Roleta - Ao Vivo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: #090808; 
+            color: #fff; 
+            padding: 20px;
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #6000ff, #8c2eff);
+            border-radius: 15px;
+        }
+        .header h1 { font-size: 28px; margin-bottom: 5px; }
+        .header span { opacity: 0.8; font-size: 14px; }
+        .sinais-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 15px;
+        }
+        .sinal-card {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 20px;
+            border-left: 5px solid #6000ff;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .sinal-card:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(96,0,255,0.3); }
+        .sinal-card.green { border-left-color: #00ff88; }
+        .sinal-card.red { border-left-color: #ff3355; }
+        .sinal-card.entrada { border-left-color: #ffaa00; animation: pulse 1.5s infinite; }
+        .sinal-card.analisando { border-left-color: #888; }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(255,170,0,0.3); }
+            50% { box-shadow: 0 0 25px rgba(255,170,0,0.6); }
+        }
+        
+        .sinal-tipo {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        .sinal-tipo.green { color: #00ff88; }
+        .sinal-tipo.red { color: #ff3355; }
+        .sinal-tipo.entrada { color: #ffaa00; }
+        .sinal-tipo.analisando { color: #888; }
+        
+        .sinal-jogo { font-size: 12px; color: #888; margin-bottom: 5px; }
+        .sinal-entrada { 
+            font-size: 22px; 
+            font-weight: 700; 
+            margin: 10px 0;
+            color: #fff;
+        }
+        .sinal-anterior { 
+            font-size: 13px; 
+            color: #aaa; 
+            font-family: monospace;
+            margin: 8px 0;
+        }
+        .sinal-status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 5px;
+        }
+        .sinal-resultado {
+            font-weight: 700;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+        .sinal-green { color: #00ff88; }
+        .sinal-loss { color: #ff3355; }
+        .sinal-data { font-size: 11px; color: #555; margin-top: 10px; }
+        .stats-bar {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 15px 25px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        .stat-item { text-align: center; }
+        .stat-value { font-size: 24px; font-weight: 700; }
+        .stat-label { font-size: 12px; color: #888; }
+        .stat-green .stat-value { color: #00ff88; }
+        .stat-red .stat-value { color: #ff3355; }
+        .stat-total .stat-value { color: #6000ff; }
+        .stat-entrada .stat-value { color: #ffaa00; }
+        .auto-refresh { 
+            text-align: center; 
+            margin-top: 20px;
+            font-size: 13px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎰 Sinais Rick Roleta</h1>
+        <span>Dados públicos da API - Sem necessidade de login</span>
+    </div>
+
+    <div class="stats-bar" id="statsBar">
+        <div class="stat-item stat-total">
+            <div class="stat-value" id="totalSinais">0</div>
+            <div class="stat-label">Total Sinais</div>
+        </div>
+        <div class="stat-item stat-green">
+            <div class="stat-value" id="totalGreen">0</div>
+            <div class="stat-label">✅ Green</div>
+        </div>
+        <div class="stat-item stat-red">
+            <div class="stat-value" id="totalRed">0</div>
+            <div class="stat-label">❌ Red</div>
+        </div>
+        <div class="stat-item stat-entrada">
+            <div class="stat-value" id="totalEntrada">0</div>
+            <div class="stat-label">🎯 Entradas</div>
+        </div>
+    </div>
+
+    <div class="sinais-grid" id="sinaisGrid"></div>
+    
+    <div class="auto-refresh" id="refreshInfo">
+        ⏱️ Atualizando a cada 5 segundos | Última atualização: --
+    </div>
+
+    <script>
+        async function buscarSinais() {
+            try {
+                const res = await fetch('https://rickroleta.com.br/api/sinais?limit=50');
+                const data = await res.json();
+                
+                if (!data.sinais || !Array.isArray(data.sinais)) return;
+                
+                atualizarUI(data.sinais, data.total);
+            } catch (e) {
+                console.error('Erro:', e);
+            }
+        }
+
+        function atualizarUI(sinais, total) {
+            // Atualiza stats
+            const greens = sinais.filter(s => s.tipo === 'green' || s.resultado === 'GREEN').length;
+            const reds = sinais.filter(s => s.tipo === 'red' || s.resultado === 'LOSS').length;
+            const entradas = sinais.filter(s => s.tipo === 'entrada').length;
+            
+            document.getElementById('totalSinais').textContent = total;
+            document.getElementById('totalGreen').textContent = greens;
+            document.getElementById('totalRed').textContent = reds;
+            document.getElementById('totalEntrada').textContent = entradas;
+            
+            // Atualiza cards
+            const grid = document.getElementById('sinaisGrid');
+            grid.innerHTML = sinais.map(sinal => {
+                let cardClass = 'sinal-card';
+                let tipoClass = 'sinal-tipo';
+                let tipoLabel = sinal.tipo || 'desconhecido';
+                
+                if (sinal.tipo === 'green' || sinal.resultado === 'GREEN') {
+                    cardClass += ' green';
+                    tipoClass += ' green';
+                } else if (sinal.tipo === 'red' || sinal.resultado === 'LOSS') {
+                    cardClass += ' red';
+                    tipoClass += ' red';
+                } else if (sinal.tipo === 'entrada') {
+                    cardClass += ' entrada';
+                    tipoClass += ' entrada';
+                } else {
+                    tipoClass += ' analisando';
+                }
+                
+                const resultadoHtml = sinal.resultado 
+                    ? `<div class="sinal-resultado ${sinal.resultado === 'GREEN' ? 'sinal-green' : 'sinal-loss'}">${sinal.resultado === 'GREEN' ? '✅ GREEN!' : '❌ LOSS'}</div>`
+                    : '';
+                
+                const statusHtml = sinal.status === 1 ? '<span class="sinal-status" style="background:#00ff8822;color:#00ff88">Ativo</span>' 
+                    : sinal.status === 0 ? '<span class="sinal-status" style="background:#ff335522;color:#ff3355">Inativo</span>' 
+                    : '';
+                
+                const entrada = sinal.entrada || sinal.observacao || '';
+                
+                // Emojis por tipo
+                const emoji = sinal.tipo === 'green' ? '✅' 
+                    : sinal.tipo === 'red' ? '❌' 
+                    : sinal.tipo === 'entrada' ? '🎯'
+                    : '🤖';
+                
+                return `
+                    <div class="${cardClass}">
+                        <div class="${tipoClass}">${emoji} ${tipoLabel.toUpperCase()}</div>
+                        <div class="sinal-jogo">🎮 ${sinal.jogo || 'Desconhecido'}</div>
+                        <div class="sinal-jogo">🆔 ${sinal.tipo_sinal || ''}</div>
+                        ${entrada ? `<div class="sinal-entrada">📊 ${entrada}</div>` : ''}
+                        ${sinal.anterior ? `<div class="sinal-anterior">📈 Anterior: ${sinal.anterior}</div>` : ''}
+                        ${statusHtml}
+                        ${resultadoHtml}
+                        <div class="sinal-data">🕐 ${new Date(sinal.data_criacao).toLocaleString('pt-BR')}</div>
+                        ${sinal.gameSlug ? `<div class="sinal-data">🔗 ${sinal.gameSlug}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('refreshInfo').innerHTML = 
+                `⏱️ Atualizando a cada 5 segundos | Última atualização: ${new Date().toLocaleTimeString('pt-BR')}`;
+        }
+
+        // Busca a cada 5 segundos
+        buscarSinais();
+        setInterval(buscarSinais, 5000);
+    </script>
+</body>
+</html>
