@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-# Instala dependências do sistema
+# Instala dependências do sistema para Chrome
 RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
@@ -27,15 +27,24 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
+
+# Copia requirements primeiro (melhor cache)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copia o código
 COPY . .
 
+# Cria diretório para dados
+RUN mkdir -p /app/data /app/chrome_profile
+
+# Define variáveis de ambiente
 ENV PYTHONUNBUFFERED=1
 ENV DISPLAY=:99
+ENV PORT=8000
 
+# Expõe a porta da API
 EXPOSE 8000
 
-# Roda o gerenciador que inicia ambos os processos
+# Comando para executar (será sobrescrito pelo railway.json)
 CMD ["python", "run.py"]
